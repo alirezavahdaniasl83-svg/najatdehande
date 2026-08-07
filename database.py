@@ -1,20 +1,33 @@
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect("database.db", check_same_thread=False)
+DATABASE_PATH = Path("database.db")
 
-cursor = conn.cursor()
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS devices(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    device_id TEXT UNIQUE,
-    name TEXT,
-    model TEXT,
-    android TEXT,
-    battery INTEGER,
-    online INTEGER,
-    last_seen TEXT
-)
-""")
+def get_connection():
+    connection = sqlite3.connect(
+        DATABASE_PATH,
+        check_same_thread=False
+    )
+    connection.row_factory = sqlite3.Row
+    return connection
 
-conn.commit()
+
+def initialize_database():
+    connection = get_connection()
+
+    connection.execute("""
+        CREATE TABLE IF NOT EXISTS devices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            device_id TEXT UNIQUE NOT NULL,
+            name TEXT,
+            model TEXT,
+            android_version TEXT,
+            battery INTEGER,
+            online INTEGER DEFAULT 0,
+            last_seen TEXT
+        )
+    """)
+
+    connection.commit()
+    connection.close()
