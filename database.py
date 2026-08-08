@@ -3,8 +3,8 @@ import sqlite3
 from datetime import datetime, timezone
 
 
-# Railway Volume روی /data متصل شده است.
-# در محیط لوکال، اگر /data وجود نداشته باشد، از پوشه فعلی استفاده می‌کنیم.
+# Railway Volume
+# در Railway، Volume روی /data متصل شده است.
 if os.path.isdir("/data"):
     DB_PATH = "/data/database.db"
 else:
@@ -18,8 +18,12 @@ def get_connection():
     return conn
 
 
-def init_db():
-    """Create the devices table if it does not already exist."""
+def initialize_database():
+    """
+    Initialize the database and create the devices table.
+    Compatible with the existing main.py.
+    """
+
     conn = get_connection()
 
     try:
@@ -41,6 +45,11 @@ def init_db():
         conn.close()
 
 
+def init_db():
+    """Alias for initialize_database."""
+    initialize_database()
+
+
 def register_device(
     device_id,
     name,
@@ -49,7 +58,7 @@ def register_device(
     battery=0,
     online=1
 ):
-    """Register a new device or update an existing device."""
+    """Register a device or update an existing device."""
 
     now = datetime.now(timezone.utc).isoformat()
 
@@ -92,7 +101,7 @@ def register_device(
 
 
 def get_devices():
-    """Return all registered devices."""
+    """Get all registered devices."""
 
     conn = get_connection()
 
@@ -117,7 +126,7 @@ def get_devices():
 
 
 def get_device(device_id):
-    """Return one device by ID."""
+    """Get one device by ID."""
 
     conn = get_connection()
 
@@ -137,21 +146,30 @@ def get_device(device_id):
 
         row = cursor.fetchone()
 
-        return dict(row) if row else None
+        if row:
+            return dict(row)
+
+        return None
 
     finally:
         conn.close()
 
 
-def update_device_status(device_id, online, battery=None):
-    """Update online status and optionally battery level."""
+def update_device_status(
+    device_id,
+    online,
+    battery=None
+):
+    """Update device online status and battery."""
 
     now = datetime.now(timezone.utc).isoformat()
 
     conn = get_connection()
 
     try:
+
         if battery is not None:
+
             conn.execute("""
                 UPDATE devices
                 SET
@@ -165,7 +183,9 @@ def update_device_status(device_id, online, battery=None):
                 now,
                 device_id
             ))
+
         else:
+
             conn.execute("""
                 UPDATE devices
                 SET
@@ -185,15 +205,16 @@ def update_device_status(device_id, online, battery=None):
 
 
 def delete_device(device_id):
-    """Delete a device from the database."""
+    """Delete a device."""
 
     conn = get_connection()
 
     try:
-        conn.execute(
-            "DELETE FROM devices WHERE device_id = ?",
-            (device_id,)
-        )
+
+        conn.execute("""
+            DELETE FROM devices
+            WHERE device_id = ?
+        """, (device_id,))
 
         conn.commit()
 
@@ -201,5 +222,5 @@ def delete_device(device_id):
         conn.close()
 
 
-# Initialize database when the module is loaded.
-init_db()
+# Initialize database on startup
+initialize_database()
