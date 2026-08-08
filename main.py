@@ -1,15 +1,17 @@
-import asyncio
-
 from fastapi import FastAPI
 
 from bot import create_bot
 from database import initialize_database
+from routers.device_router import router as device_router
 
 
 app = FastAPI(
     title="NajatDehande",
     version="0.2.0"
 )
+
+# اتصال API دستگاه‌ها
+app.include_router(device_router)
 
 
 @app.on_event("startup")
@@ -25,7 +27,6 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    # فعلاً Railway خودش پروسه را مدیریت می‌کند.
     pass
 
 
