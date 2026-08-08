@@ -8,6 +8,7 @@ from telegram.ext import (
 )
 
 from config import config
+from device_service import get_devices
 
 
 MAIN_MENU = ReplyKeyboardMarkup(
@@ -55,6 +56,38 @@ async def help_command(
     )
 
 
+async def show_devices(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+    if not is_admin(update):
+        return
+
+    devices = get_devices()
+
+    if not devices:
+        await update.message.reply_text(
+            "📱 دستگاه‌ها\n\n"
+            "هنوز هیچ دستگاهی ثبت نشده است."
+        )
+        return
+
+    lines = ["📱 دستگاه‌های ثبت‌شده:\n"]
+
+    for device in devices:
+        status = "🟢 آنلاین" if device["online"] else "🔴 آفلاین"
+
+        lines.append(
+            f"📱 {device['name'] or 'بدون نام'}\n"
+            f"مدل: {device['model'] or 'نامشخص'}\n"
+            f"اندروید: {device['android_version'] or 'نامشخص'}\n"
+            f"باتری: {device['battery'] if device['battery'] is not None else 'نامشخص'}%\n"
+            f"وضعیت: {status}\n"
+        )
+
+    await update.message.reply_text("\n".join(lines))
+
+
 async def menu_handler(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -65,10 +98,7 @@ async def menu_handler(
     text = update.message.text
 
     if text == "📱 دستگاه‌ها":
-        await update.message.reply_text(
-            "📱 دستگاه‌های ثبت‌شده\n\n"
-            "فعلاً هیچ دستگاهی ثبت نشده است."
-        )
+        await show_devices(update, context)
 
     elif text == "⚙️ تنظیمات":
         await update.message.reply_text(
