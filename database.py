@@ -1,7 +1,11 @@
+import os
 import sqlite3
 from pathlib import Path
 
-DATABASE_PATH = Path("database.db")
+
+DATABASE_PATH = Path(
+    os.getenv("DATABASE_PATH", "database.db")
+)
 
 
 def get_connection():
@@ -9,7 +13,9 @@ def get_connection():
         DATABASE_PATH,
         check_same_thread=False
     )
+
     connection.row_factory = sqlite3.Row
+
     return connection
 
 
